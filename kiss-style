@@ -1,0 +1,98 @@
+#!/bin/sh
+
+# Also used as warn color
+lcol="\033[1;33m"
+
+# Used as primary color
+lcol2="\033[1;34m"
+
+# Used as error color
+lcol3="\033[1;31m"
+
+lclr="\033[m"
+
+log() {
+    printf '%b%s %b%s%b %s\n' \
+        "$lcol" "${3:-->}" "${lclr}${2:+$lcol2}" "$1" "$lclr" "$2" >&2
+}
+
+war() {
+    printf '%b%s%b:\n' \
+        "$lcol2" "$file" "$lclr"
+    log "$1" "$2" "${3:-WARNING}"
+    echo
+}
+
+err() {
+    printf '%b%s%b:\n' \
+        "$lcol2" "$file" "$lclr"
+
+    printf '%b%s%b %s\n' \
+        "$lcol3" "ERR ->" "$lclr" "$1"
+
+    printf '%b\t%s%b %s\n' \
+        "$lcol3" "On line $linenum:" "$lclr" "$2"
+
+    position=$(($(echo "$4" | awk -F":" '{print $1}')+20))
+    while [ "$position" -gt 0 ]; do
+        printf " "
+        position=$((position-1))
+    done;
+    printf "%b^ Here%b\n" \
+        "$lcol" "$lclr"
+    echo
+}
+
+main() {
+    for arg in "$@"; do
+        linenum=1
+        prev_indentation=0
+        file=$arg
+        if [ "$(cat -T "$arg" 2>&1 | head -n 1)" != '#!/bin/sh -e' ]; then
+             war "Incorrect shebang. All kiss package build scripts should have \"#!/bin/sh -e\" as their shebang. If this is not a kiss package please ignore this warning."
+        fi
+        cat "$arg" | while IFS= read -r line; do
+            indentation=0
+            tmp=$line
+
+            while [ -n "$tmp" ]; do
+                rest="${tmp#?}"    
+                first="${tmp%"$rest"}"    
+                if [ "$first" = " " ]; then
+                    indentation=$((indentation+1))
+                fi
+
+                if [ "$first" != " " ]; then
+                    break
+                fi
+                tmp="$rest"
+            done
+            if echo "$line" | grep -q -P '\t'; then
+                err "Style guide requires 4 spaces instead of tabs." "$line" "$(echo "$line" | grep -q -P -o '\t' )"
+            elif [ $indentation -ne $((prev_indentation+4)) -a $indentation -ne $((prev_indentation-4)) -a \
+                $indentation -ne $prev_indentation -a $indentation -ne 0 ]; then
+                err "Indentations should each use 4 spaces. Sometimes this error can also be indicative of invisible characters." "$line"
+            elif [ $(echo "$line" | cut -c1-1) = "#" ]; then
+                line_tmp=$line
+
+                echo $line
+                case "$(echo "$line_tmp" | awk '{print $2}' | cut -c1-1)" in
+                    ([[:lower:]]) err "Comments should each start with a capital letter." $line 3;;
+                esac
+            fi
+
+            if echo "$line" | grep -q "cp "; then
+                war "You seem to be using \"cp\" in your script. In most cases you should opt for the \"install\" command when possible."
+            fi
+
+            if [ "$(printf "$line" | wc -c)" -gt 80 ]; then
+                err "Lines should now exceed 80 characters. Try to find a way to split this line." "$line" 0
+            fi
+
+            linenum=$((linenum+1))
+            prev_indentation=$indentation
+        done;
+    done;
+}
+
+main "$@"
