@@ -84,7 +84,7 @@ main() {
             fi
 
             if [ "$(printf \"%s\" "$line" | wc -c)" -gt 80 ]; then
-                err "Lines should now exceed 80 characters. Try to find a way to split this line." "$line" 0
+                err "Lines should not exceed 80 characters. Try to find a way to split this line." "$line" 0
             fi
 
             linenum=$((linenum+1))
