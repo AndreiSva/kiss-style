@@ -52,9 +52,9 @@ main() {
              war "Incorrect shebang. All kiss package build scripts should have \"#!/bin/sh -e\" as their shebang. If this is not a kiss package please ignore this warning."
         fi
 
-		if echo "$arg" | grep -q "cp "; then
-			war "You seem to be using \"cp\" in your script. In most cases you should opt for the \"install\" command when possible."
-		fi
+        if echo "$arg" | grep -q "cp "; then
+            war "You seem to be using \"cp\" in your script. In most cases you should opt for the \"install\" command when possible."
+        fi
 
         cat "$arg" | while IFS= read -r line; do
             indentation=0
@@ -73,11 +73,11 @@ main() {
                 tmp="$rest"
             done
 
-            if echo "$line" | grep -q '	'; then
-                err "Style guide requires 4 spaces instead of tabs." "$line" "$(echo "$line" | grep -q -o '	' )"
+            if echo "$line" | grep -q '    '; then
+                err "Style guide requires 4 spaces instead of tabs." "$line" "$(echo "$line" | grep -q -o '    ' )"
             elif [ $indentation -ne $((prev_indentation+4)) ] && [ $indentation -ne $((prev_indentation-4)) ] && [ $indentation -ne $prev_indentation ] && [ $indentation -ne 0 ]; then
                 err "Indentations should each use 4 spaces. Sometimes this error can also be indicative of invisible characters." "$line"
-			elif [ "$(echo "$line" | cut -c1-1)" = "#" ] && [ "$(echo "$line" | awk '{print $2}')" != "shellcheck" ]; then
+            elif [ "$(echo "$line" | cut -c1-1)" = "#" ] && [ "$(echo "$line" | awk '{print $2}')" != "shellcheck" ]; then
                 case "$(echo "$line" | awk '{print $2}' | cut -c1-1)" in
                     ([[:lower:]]) err "Comments should each start with a capital letter." "$line" 3;;
                 esac
