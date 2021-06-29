@@ -11,6 +11,8 @@ lcol3="\033[1;31m"
 
 lclr="\033[m"
 
+failed=0
+
 log() {
     printf '%b%s %b%s%b %s\n' \
         "$lcol" "${3:-->}" "${lclr}${2:+$lcol2}" "$1" "$lclr" "$2" >&2
@@ -40,7 +42,7 @@ err() {
     done;
     printf "%b^ Here%b\n" \
         "$lcol" "$lclr"
-    echo
+	export failed=1
 }
 
 main() {
@@ -56,7 +58,7 @@ main() {
             war "You seem to be using \"cp\" in your script. In most cases you should opt for the \"install\" command when possible."
         fi
 
-        cat "$arg" | while IFS= read -r line; do
+        while IFS= read -r line; do
             indentation=0
             tmp=$line
 
@@ -73,8 +75,8 @@ main() {
                 tmp="$rest"
             done
 
-            if echo "$line" | grep -q '    '; then
-                err "Style guide requires 4 spaces instead of tabs." "$line" "$(echo "$line" | grep -q -o '    ' )"
+            if echo "$line" | grep -q '	'; then
+                err "Style guide requires 4 spaces instead of tabs." "$line" "$(echo "$line" | grep -q -o '	' )"
             elif [ $indentation -ne $((prev_indentation+4)) ] && [ $indentation -ne $((prev_indentation-4)) ] && [ $indentation -ne $prev_indentation ] && [ $indentation -ne 0 ]; then
                 err "Indentations should each use 4 spaces. Sometimes this error can also be indicative of invisible characters." "$line"
             elif [ "$(echo "$line" | cut -c1-1)" = "#" ] && [ "$(echo "$line" | awk '{print $2}')" != "shellcheck" ]; then
@@ -89,8 +91,14 @@ main() {
 
             linenum=$((linenum+1))
             prev_indentation=$indentation
-        done;
+        done < "$arg";
     done;
+    
+    if [ "$failed" -eq 0 ]; then
+        log "Tests completed with no errors." " "
+    else
+        log "Tests failed" " "
+    fi
 }
 
 main "$@"
