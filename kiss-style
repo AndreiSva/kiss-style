@@ -12,6 +12,7 @@ lcol3="\033[1;31m"
 lclr="\033[m"
 
 failed=0
+suppress_warn=0
 
 log() {
     printf '%b%s %b%s%b %s\n' \
@@ -19,6 +20,10 @@ log() {
 }
 
 war() {
+	if [ $suppres_warn -eq 1 ]; then
+		return
+	fi
+
     printf '%b%s%b:\n' \
         "$lcol2" "$file" "$lclr"
     log "$1" "$2" "${3:-WARNING}"
@@ -46,6 +51,19 @@ err() {
 }
 
 main() {
+	if [ $# -eq 0 ] || [ $1 = "-h" ]; then
+		echo "kiss-style [h|v|s] [script]..."
+		log "-h" "prints this help dialog"
+		log "-v" "displays version information to stdout"
+		log "-s" "suppreses warning messages"
+		exit
+	fi
+
+	case $1 in
+		-v) printf "1.0\n" && exit ;;
+		-s) suppress_warn=1 ;;
+	esac
+
     for arg in "$@"; do
         linenum=1
         prev_indentation=0
