@@ -12,6 +12,7 @@ lcol3="\033[1;31m"
 lclr="\033[m"
 
 failed=0
+warnings=0
 suppress_warn=0
 
 log() {
@@ -27,6 +28,7 @@ war() {
     printf '%b%s%b:\n' \
         "$lcol2" "$file" "$lclr"
     log "$1" "$2" "${3:-WARNING}"
+    warnings=$((warnings+1))
     echo
 }
 
@@ -47,7 +49,7 @@ err() {
     done;
     printf "%b^ Here%b\n" \
         "$lcol" "$lclr"
-    export failed=1
+    failed=$((failed+1))
 }
 
 main() {
@@ -115,7 +117,11 @@ main() {
     if [ "$failed" -eq 0 ]; then
         log "Tests completed with no errors." " "
     else
-        log "Tests failed" " "
+        log "Tests failed." " "
+    
+        printf "errors: %b%i%b\nwarnings: %b%i%b\n" \
+            $lcol3 $failed $lclr \
+            $lcol $warnings $lclr
     fi
 }
 
