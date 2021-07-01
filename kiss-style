@@ -20,9 +20,9 @@ log() {
 }
 
 war() {
-	if [ $suppress_warn -eq 1 ]; then
-		return
-	fi
+    if [ $suppress_warn -eq 1 ]; then
+        return
+    fi
 
     printf '%b%s%b:\n' \
         "$lcol2" "$file" "$lclr"
@@ -47,22 +47,22 @@ err() {
     done;
     printf "%b^ Here%b\n" \
         "$lcol" "$lclr"
-	export failed=1
+    export failed=1
 }
 
 main() {
-	if [ $# -eq 0 ] || [ $1 = "-h" ]; then
-		echo "kiss-style [h|v|s] [script]..."
-		log "-h" "prints this help dialog"
-		log "-v" "displays version information to stdout"
-		log "-s" "suppreses warning messages"
-		exit
-	fi
+    if [ $# -eq 0 ] || [ "$1" = "-h" ]; then
+        echo "kiss-style [h|v|s] [script]..."
+        log "-h" "prints this help dialog"
+        log "-v" "displays version information to stdout"
+        log "-s" "suppreses warning messages"
+        exit
+    fi
 
-	case $1 in
-		-v) printf "1.0\n" && exit ;;
-		-s) suppress_warn=1; shift ;;
-	esac
+    case $1 in
+        -v) printf "1.0\n" && exit ;;
+        -s) suppress_warn=1; shift ;;
+    esac
 
     for arg in "$@"; do
         linenum=1
@@ -95,7 +95,7 @@ main() {
 
             if echo "$line" | grep -q '	'; then
                 err "Style guide requires 4 spaces instead of tabs." "$line" "$(echo "$line" | grep -q -o '	' )"
-            elif [ $indentation -ne $((prev_indentation+4)) ] && [ $indentation -ne $((prev_indentation-4)) ] && [ $indentation -ne $prev_indentation ] && [ $indentation -ne 0 ]; then
+            elif [ $indentation -ne $((prev_indentation+4)) ] && [ $indentation -ne $((prev_indentation-4)) ] && [ $indentation -ne $prev_indentation ] && [ $indentation -ne 0 ] && [ "$line" != '\n' ]; then
                 err "Indentations should each use 4 spaces. Sometimes this error can also be indicative of invisible characters." "$line"
             elif [ "$(echo "$line" | cut -c1-1)" = "#" ] && [ "$(echo "$line" | awk '{print $2}')" != "shellcheck" ]; then
                 case "$(echo "$line" | awk '{print $2}' | cut -c1-1)" in
@@ -103,7 +103,7 @@ main() {
                 esac
             fi
 
-            if [ "$(printf \"%s\" "$line" | wc -c)" -gt 80 ]; then
+            if [ "$(printf \"%s\" "$line" | awk '{$1=$1};1' | wc -c)" -gt 80 ]; then
                 err "Lines should not exceed 80 characters. Try to find a way to split this line." "$line" 0
             fi
 
