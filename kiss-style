@@ -61,7 +61,7 @@ main() {
 
 	case $1 in
 		-v) printf "1.0\n" && exit ;;
-		-s) suppress_warn=1 ;;
+		-s) suppress_warn=1; shift ;;
 	esac
 
     for arg in "$@"; do
