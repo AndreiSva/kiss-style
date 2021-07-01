@@ -20,7 +20,7 @@ log() {
 }
 
 war() {
-	if [ $suppres_warn -eq 1 ]; then
+	if [ $suppress_warn -eq 1 ]; then
 		return
 	fi
 
