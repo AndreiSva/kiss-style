@@ -20,6 +20,18 @@ log() {
         "$lcol" "${3:-->}" "${lclr}${2:+$lcol2}" "$1" "$lclr" "$2" >&2
 }
 
+locate() {
+    printf '%b\t%s%b %s\n' \
+        "$lcol3" "On line $linenum:" "$lclr" "$1"
+    position=$((20+$2))
+    while [ "$position" -gt 0 ]; do
+        printf " "
+        position=$((position-1))
+    done;
+    printf "%b^ Here%b\n" \
+        "$lcol" "$lclr"
+}
+
 war() {
     if [ $suppress_warn -eq 1 ]; then
         return
@@ -27,7 +39,17 @@ war() {
 
     printf '%b%s%b:\n' \
         "$lcol2" "$file" "$lclr"
-    log "$1" "$2" "${3:-WARNING}"
+
+    printf '%b%s%b %s\n' \
+        "$lcol" "WARNING ->" "$lclr" "$1"
+   
+    if [ -z "$3" ]; then
+        :
+    else
+        locate "$2" "$3"
+        echo
+    fi
+
     warnings=$((warnings+1))
     echo
 }
@@ -38,17 +60,8 @@ err() {
 
     printf '%b%s%b %s\n' \
         "$lcol3" "ERR ->" "$lclr" "$1"
-
-    printf '%b\t%s%b %s\n' \
-        "$lcol3" "On line $linenum:" "$lclr" "$2"
-
-    position=$(($(echo "$4" | awk -F":" '{print $1}')+20))
-    while [ "$position" -gt 0 ]; do
-        printf " "
-        position=$((position-1))
-    done;
-    printf "%b^ Here%b\n" \
-        "$lcol" "$lclr"
+    
+    locate "$2" "$3"
     failed=$((failed+1))
 }
 
@@ -98,10 +111,10 @@ main() {
             if echo "$line" | grep -q '	'; then
                 err "Style guide requires 4 spaces instead of tabs." "$line" "$(echo "$line" | grep -q -o '	' )"
             elif [ $indentation -ne $((prev_indentation+4)) ] && [ $indentation -ne $((prev_indentation-4)) ] && [ $indentation -ne $prev_indentation ] && [ $indentation -ne 0 ] && [ "$line" != '\n' ]; then
-                err "Indentations should each use 4 spaces. Sometimes this error can also be indicative of invisible characters." "$line"
+                err "Indentations should each use 4 spaces. Sometimes this error can also be indicative of invisible characters." "$line" 0
             elif [ "$(echo "$line" | cut -c1-1)" = "#" ] && [ "$(echo "$line" | awk '{print $2}')" != "shellcheck" ]; then
                 case "$(echo "$line" | awk '{print $2}' | cut -c1-1)" in
-                    ([[:lower:]]) err "Comments should each start with a capital letter." "$line" 3;;
+                    ([[:lower:]]) war "Comments should each start with a capital letter." "$line" 3;;
                 esac
             fi
 
