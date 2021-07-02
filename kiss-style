@@ -75,7 +75,7 @@ main() {
     fi
 
     case $1 in
-        -v) printf "1.0\n" && exit ;;
+        -v) printf "v1.1\n" && exit ;;
         -s) suppress_warn=1; shift ;;
     esac
 
