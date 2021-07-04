@@ -1,4 +1,5 @@
 #!/bin/sh
+# Check if a kiss script complies to the style guidelines 
 
 # Also used as warn color
 lcol="\033[1;33m"
